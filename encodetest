@@ -8,11 +8,16 @@ def weight_va(shape):
 def bias_va(shape):
     initial = tf.constant(0.1,shape=shape)
     return tf.Variable(initial)
-#进行卷积操作
-def conv2d(x,W):
+#一步卷积操作
+def conv2d_1(x,W):
     #x 输入的张量形状[批次，长，宽，通道数] 彩色图片通道数为3
     #W 滤波器张量[长，宽，输入通道数，输出通道数]
     return tf.nn.conv2d(x,W,strides=[1,1,1,1],padding='SAME')
+#两步卷积操作
+def conv2d_2(x,W):
+    #x 输入的张量形状[批次，长，宽，通道数] 彩色图片通道数为3
+    #W 滤波器张量[长，宽，输入通道数，输出通道数]
+    return tf.nn.conv2d(x,W,strides=[1,2,2,1],padding='SAME')
 
 #一步池化
 def max_poll_2x2_1(x):
@@ -30,47 +35,47 @@ x = tf.placeholder(tf.float32,[None,128,128,3])
 #第一层
 W_conv1 = weight_va([11,11,3,16])
 b_conv1 = bias_va([16])
-h_conv1 = tf.nn.relu(conv2d(x,W_conv1)+b_conv1)
-h_pool1 = max_poll_2x2_1(h_conv1)
+h_conv1 = tf.nn.relu(conv2d_1(x,W_conv1)+b_conv1)
+#h_pool1 = max_poll_2x2_1(h_conv1)
 
 #第二层
 W_conv2 = weight_va([11,11,16,32])
 b_conv2 = bias_va([32])
-h_conv2 = tf.nn.relu(conv2d(h_pool1,W_conv2)+b_conv2)
-h_pool2 = max_poll_2x2_2(h_conv2)
+h_conv2 = tf.nn.relu(conv2d_2(h_conv1,W_conv2)+b_conv2)
+#h_pool2 = max_poll_2x2_2(h_conv2)
 
 #第三层
 W_conv3 = weight_va([5,5,32,32])
 b_conv3 = bias_va([32])
-h_conv3 = tf.nn.relu(conv2d(h_pool2,W_conv3)+b_conv3)
-h_pool3 = max_poll_2x2_1(h_conv3)
+h_conv3 = tf.nn.relu(conv2d_1(h_conv2,W_conv3)+b_conv3)
+#h_pool3 = max_poll_2x2_1(h_conv3)
 
 #第四层
 W_conv4 = weight_va([5,5,32,64])
 b_conv4 = bias_va([64])
-h_conv4 = tf.nn.relu(conv2d(h_pool3,W_conv4)+b_conv4)
-h_pool4 = max_poll_2x2_2(h_conv4)
+h_conv4 = tf.nn.relu(conv2d_2(h_conv3,W_conv4)+b_conv4)
+#h_pool4 = max_poll_2x2_2(h_conv4)
 
 #第五层
 W_conv5 = weight_va([5,5,64,64])
 b_conv5 = bias_va([64])
-h_conv5 = tf.nn.relu(conv2d(h_pool4,W_conv5)+b_conv3)
-h_pool5 = max_poll_2x2_1(h_conv5)
+h_conv5 = tf.nn.relu(conv2d_1(h_conv4,W_conv5)+b_conv3)
+#h_pool5 = max_poll_2x2_1(h_conv5)
 
 #第六层
 W_conv6 = weight_va([5,5,64,128])
 b_conv6 = bias_va([128])
-h_conv6 = tf.nn.relu(conv2d(h_pool5,W_conv6)+b_conv6)
-h_pool6 = max_poll_2x2_2(h_conv6)
+h_conv6 = tf.nn.relu(conv2d_2(h_conv5,W_conv6)+b_conv6)
+#h_pool6 = max_poll_2x2_2(h_conv6)
 
 #第七层
 W_conv7 = weight_va([3,3,128,128])
 b_conv7 = bias_va([128])
-h_conv7 = tf.nn.relu(conv2d(h_pool6,W_conv7)+b_conv7)
-h_pool7 = max_poll_2x2_1(h_conv7)
+h_conv7 = tf.nn.relu(conv2d_1(h_conv6,W_conv7)+b_conv7)
+#h_pool7 = max_poll_2x2_1(h_conv7)
 
 #第八层
 W_conv8 = weight_va([3,3,128,256])
 b_conv8 = bias_va([256])
-h_conv8 = tf.nn.relu(conv2d(h_pool7,W_conv8)+b_conv8)
-h_pool8 = max_poll_2x2_2(h_conv8)
+h_conv8 = tf.nn.relu(conv2d_2(h_conv7,W_conv8)+b_conv8)
+#h_pool8 = max_poll_2x2_2(h_conv8)
