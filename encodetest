@@ -165,3 +165,64 @@ fW_conv16 = weight_va([3,3,2,2])
 fb_conv16 = bias_va([2])
 flow_2d = tf.nn.relu(conv2d_1(fh_conv15,fW_conv16)+fb_conv16)
 
+#match解码器
+mW = weight_va([3,3,512,256])
+mb = bias_va([256])
+minp = tf.nn.relu(conv2d_1(concat1,mW)+mb)
+
+mW_deconv1 = weight_va([3,3,128,256])
+mb_deconv1 = bias_va([128])
+mh_deconv1 = tf.nn.relu(deconv2d_2(minp,mW_deconv1,[batch_size,16,16,128])+mb_deconv1)
+
+mW_conv2 = weight_va([3,3,128,128])
+mb_conv2 = bias_va([128])
+mh_conv2 = tf.nn.relu(conv2d_1(mh_deconv1,mW_conv2)+mb_conv2)
+
+mW_conv3 = weight_va([3,3,128,128])
+mb_conv3 = bias_va([128])
+mh_conv3 = conv2d_1(mh_conv2,mW_conv3)+mb_conv3
+
+mW_deconv4 = weight_va([3,3,64,128])
+mb_deconv4 = bias_va([64])
+mh_deconv4 = tf.nn.relu(deconv2d_2(mh_conv3,mW_deconv4,[batch_size,32,32,64])+mb_deconv4)
+
+mW_conv5 = weight_va([3,3,64,64])
+mb_conv5 = bias_va([64])
+mh_conv5 = tf.nn.relu(conv2d_1(mh_deconv4,mW_conv5)+mb_conv5)
+
+mW_conv6 = weight_va([3,3,64,64])
+mb_conv6 = bias_va([64])
+mh_conv6 = conv2d_1(mh_conv5,mW_conv6)+mb_conv6
+
+mW_deconv7 = weight_va([3,3,32,64])
+mb_deconv7 = bias_va([32])
+mh_deconv7 = tf.nn.relu(deconv2d_2(mh_conv6,mW_deconv7,[batch_size,64,64,32])+mb_deconv7)
+
+mW_conv8 = weight_va([3,3,32,32])
+mb_conv8 = bias_va([32])
+mh_conv8 = tf.nn.relu(conv2d_1(mh_deconv7,mW_conv8)+mb_conv8)
+
+mW_conv9 = weight_va([3,3,32,32])
+mb_conv9 = bias_va([32])
+mh_conv9 = conv2d_1(mh_conv8,mW_conv9)+mb_conv9
+
+mW_deconv10 = weight_va([3,3,16,32])
+mb_deconv10 = bias_va([16])
+mh_deconv10 = tf.nn.relu(deconv2d_2(mh_conv9,mW_deconv10,[batch_size,128,128,16])+mb_deconv10)
+
+mW_conv11 = weight_va([3,3,16,16])
+mb_conv11 = bias_va([16])
+mh_conv11 = tf.nn.relu(conv2d_1(mh_deconv10,mW_conv11)+mb_conv11)
+
+mW_conv12 = weight_va([3,3,16,16])
+mb_conv12 = bias_va([16])
+mh_conv12 = conv2d_1(mh_conv11,mW_conv12)+mb_conv12
+
+mW_deconv13 = weight_va([3,3,2,16])
+mb_deconv13 = bias_va([2])
+mh_deconv13 = tf.nn.relu(deconv2d_2(mh_conv12,mW_deconv13,[batch_size,128,128,2])+mb_deconv13)
+
+mW_conv14 = weight_va([3,3,2,2])
+mb_conv14 = bias_va([2])
+matchability = tf.nn.softmax(conv2d_1(mh_deconv13,mW_conv14)+mb_conv14)
+
