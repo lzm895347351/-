@@ -15,9 +15,20 @@ def conv2d_1(x,W):
     return tf.nn.conv2d(x,W,strides=[1,1,1,1],padding='SAME')
 #两步卷积操作
 def conv2d_2(x,W):
-    #x 输入的张量形状[批次，长，宽，通道数] 彩色图片通道数为3
+    #x 输入的张量形状[批次，长，宽，通道数] 彩色图片通道数为3 
     #W 滤波器张量[长，宽，输入通道数，输出通道数]
     return tf.nn.conv2d(x,W,strides=[1,2,2,1],padding='SAME')
+#一步反卷积
+def deconv2d_2(x,W,out):
+    #x 输入的张量形状[批次，长，宽，通道数] 彩色图片通道数为3 
+    #W 滤波器张量[长，宽，输入通道数，输出通道数]
+    return tf.nn.conv2d_transpose(x,W,out,strides=[1,2,2,1],padding='SAME')
+#两步反卷积
+def deconv2d_1(x,W,out):
+    #x 输入的张量形状[批次，长，宽，通道数] 彩色图片通道数为3 
+    #W 滤波器张量[长，宽，输入通道数，输出通道数]
+    return tf.nn.conv2d_transpose(x,W,out,strides=[1,1,1,1],padding='SAME')
+
 
 #一步池化
 def max_poll_2x2_1(x):
@@ -27,55 +38,130 @@ def max_poll_2x2_1(x):
 def max_poll_2x2_2(x):
     return tf.nn.max_pool(x,ksize=[1,2,2,1],strides=[1,2,2,1],padding='SAME')
 
-x = tf.placeholder(tf.float32,[None,128,128,3])
-#y = tf.placeholder(tf.float32,[None,])
+source = tf.placeholder(tf.float32,[None,128,128,3])
+target = tf.placeholder(tf.float32,[None,128,128,3])
 
-#x_image = tf.reshape(x.[-1,128,128,3])
 
+#孪生子卷积网络
 #第一层
-W_conv1 = weight_va([11,11,3,16])
+W_conv1 = weight_va([3,3,3,16])
 b_conv1 = bias_va([16])
-h_conv1 = tf.nn.relu(conv2d_1(x,W_conv1)+b_conv1)
-#h_pool1 = max_poll_2x2_1(h_conv1)
+sh_conv1 = tf.nn.relu(conv2d_1(source,W_conv1)+b_conv1)
+th_conv1 = tf.nn.relu(conv2d_1(target,W_conv1)+b_conv1)
+
 
 #第二层
-W_conv2 = weight_va([11,11,16,32])
+W_conv2 = weight_va([3,3,16,32])
 b_conv2 = bias_va([32])
-h_conv2 = tf.nn.relu(conv2d_2(h_conv1,W_conv2)+b_conv2)
-#h_pool2 = max_poll_2x2_2(h_conv2)
+sh_conv2 = tf.nn.relu(conv2d_2(sh_conv1,W_conv2)+b_conv2)
+th_conv2 = tf.nn.relu(conv2d_2(th_conv1,W_conv2)+b_conv2)
 
 #第三层
-W_conv3 = weight_va([5,5,32,32])
+W_conv3 = weight_va([3,3,32,32])
 b_conv3 = bias_va([32])
-h_conv3 = tf.nn.relu(conv2d_1(h_conv2,W_conv3)+b_conv3)
-#h_pool3 = max_poll_2x2_1(h_conv3)
+sh_conv3 = tf.nn.relu(conv2d_1(sh_conv2,W_conv3)+b_conv3)
+th_conv3 = tf.nn.relu(conv2d_1(th_conv2,W_conv3)+b_conv3)
 
 #第四层
-W_conv4 = weight_va([5,5,32,64])
+W_conv4 = weight_va([3,3,32,64])
 b_conv4 = bias_va([64])
-h_conv4 = tf.nn.relu(conv2d_2(h_conv3,W_conv4)+b_conv4)
-#h_pool4 = max_poll_2x2_2(h_conv4)
+sh_conv4 = tf.nn.relu(conv2d_2(sh_conv3,W_conv4)+b_conv4)
+th_conv4 = tf.nn.relu(conv2d_2(th_conv3,W_conv4)+b_conv4)
 
 #第五层
-W_conv5 = weight_va([5,5,64,64])
+W_conv5 = weight_va([3,3,64,64])
 b_conv5 = bias_va([64])
-h_conv5 = tf.nn.relu(conv2d_1(h_conv4,W_conv5)+b_conv3)
-#h_pool5 = max_poll_2x2_1(h_conv5)
+sh_conv5 = tf.nn.relu(conv2d_1(sh_conv4,W_conv5)+b_conv5)
+th_conv5 = tf.nn.relu(conv2d_1(th_conv4,W_conv5)+b_conv5)
 
 #第六层
-W_conv6 = weight_va([5,5,64,128])
+W_conv6 = weight_va([3,3,64,128])
 b_conv6 = bias_va([128])
-h_conv6 = tf.nn.relu(conv2d_2(h_conv5,W_conv6)+b_conv6)
-#h_pool6 = max_poll_2x2_2(h_conv6)
+sh_conv6 = tf.nn.relu(conv2d_2(sh_conv5,W_conv6)+b_conv6)
+th_conv6 = tf.nn.relu(conv2d_2(th_conv5,W_conv6)+b_conv6)
 
 #第七层
 W_conv7 = weight_va([3,3,128,128])
 b_conv7 = bias_va([128])
-h_conv7 = tf.nn.relu(conv2d_1(h_conv6,W_conv7)+b_conv7)
-#h_pool7 = max_poll_2x2_1(h_conv7)
+sh_conv7 = tf.nn.relu(conv2d_1(sh_conv6,W_conv7)+b_conv7)
+th_conv7 = tf.nn.relu(conv2d_1(th_conv6,W_conv7)+b_conv7)
 
 #第八层
 W_conv8 = weight_va([3,3,128,256])
 b_conv8 = bias_va([256])
-h_conv8 = tf.nn.relu(conv2d_2(h_conv7,W_conv8)+b_conv8)
-#h_pool8 = max_poll_2x2_2(h_conv8)
+sh_conv8 = tf.nn.relu(conv2d_2(sh_conv7,W_conv8)+b_conv8)
+th_conv8 = tf.nn.relu(conv2d_2(th_conv7,W_conv8)+b_conv8)
+
+#连接两输出
+concat1 = tf.concat([th_conv8,sh_conv8],axis=3)
+
+#flow解码器
+fW = weight_va([3,3,512,512])
+fb = bias_va([512])
+fin = tf.nn.relu(conv2d_1(concat1,fW)+fb)
+
+
+fW_deconv1 = weight_va([3,3,256,512])
+fb_deconv1 = bias_va([256])
+fh_deconv1 = tf.nn.relu(deconv2d_2(fin,fW_deconv1,[batch_size,16,16,256])+fb_deconv1)
+
+fW_conv2 = weight_va([3,3,256,256])
+fb_conv2 = bias_va([256])
+fh_conv2 = tf.nn.relu(conv2d_1(fh_deconv1,fW_conv2)+fb_conv2)
+
+fW_conv3 = weight_va([3,3,256,256])
+fb_conv3 = bias_va([256])
+fh_conv3 = conv2d_1(fh_conv2,fW_conv3)+fb_conv3
+
+fW_deconv4 = weight_va([3,3,128,256])
+fb_deconv4 = bias_va([128])
+fh_deconv4 = tf.nn.relu(deconv2d_2(fh_conv3,fW_deconv4,[batch_size,32,32,128])+fb_deconv4)
+
+fW_conv5 = weight_va([3,3,128,128])
+fb_conv5 = bias_va([128])
+fh_conv5 = tf.nn.relu(conv2d_1(fh_deconv4,fW_conv5)+fb_conv5)
+
+fW_conv6 = weight_va([3,3,128,128])
+fb_conv6 = bias_va([128])
+fh_conv6 = conv2d_1(fh_conv5,fW_conv6)+fb_conv6
+
+fW_deconv7 = weight_va([3,3,64,128])
+fb_deconv7 = bias_va([64])
+fh_deconv7 = tf.nn.relu(deconv2d_2(fh_conv6,fW_deconv7,[batch_size,32,32,64])+fb_deconv7)
+
+fW_conv8 = weight_va([3,3,64,64])
+fb_conv8 = bias_va([64])
+fh_conv8 = tf.nn.relu(conv2d_1(fh_deconv7,fW_conv8)+fb_conv8)
+
+fW_conv9 = weight_va([3,3,64,64])
+fb_conv9 = bias_va([64])
+fh_conv9 = conv2d_1(fh_conv8,fW_conv9)+fb_conv9
+
+fW_deconv10 = weight_va([3,3,32,64])
+fb_deconv10 = bias_va([32])
+fh_deconv10 = tf.nn.relu(deconv2d_2(fh_conv9,fW_deconv10,[batch_size,128,128,32])+fb_deconv10)
+
+fW_conv11 = weight_va([3,3,32,32])
+fb_conv11 = bias_va([32])
+fh_conv11 = tf.nn.relu(conv2d_1(fh_deconv10,fW_conv11)+fb_conv11)
+
+fW_conv12 = weight_va([3,3,32,32])
+fb_conv12 = bias_va([32])
+fh_conv12 = conv2d_1(fh_conv11,fW_conv12)+fb_conv12
+
+fW_deconv13 = weight_va([3,3,2,32])
+fb_deconv13 = bias_va([2])
+fh_deconv13 = tf.nn.relu(deconv2d_2(fh_conv12,fW_deconv13,[batch_size,128,128,2])+fb_deconv13) #！！！！
+
+fW_conv14 = weight_va([3,3,2,2])
+fb_conv14 = bias_va([2])
+fh_conv14 = tf.nn.relu(conv2d_1(fh_deconv13,fW_conv14)+fb_conv14)
+
+fW_conv15 = weight_va([3,3,2,2])
+fb_conv15 = bias_va([2])
+fh_conv15 = tf.nn.relu(conv2d_1(fh_conv14,fW_conv15)+fb_conv15)
+
+fW_conv16 = weight_va([3,3,2,2])
+fb_conv16 = bias_va([2])
+flow_2d = tf.nn.relu(conv2d_1(fh_conv15,fW_conv16)+fb_conv16)
+
